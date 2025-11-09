@@ -17,6 +17,7 @@ end
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
+local CoreLink = "https://vecxoremoteapi.ngrok.pro/"
 local COMMAND_URL = "https://vecxoremoteapi.ngrok.pro/latest-command"
 local REGISTER_URL = "https://vecxoremoteapi.ngrok.pro/register-server"
 local REPORT_URL = "https://vecxoremoteapi.ngrok.pro/report-players"
@@ -31,6 +32,21 @@ local serverId = game.JobId
 local serverLabel = "unknown"
 local permBanned = {}
 local vecxoapicon = {}
+local function UpdateUser(UserId, Rank, Color, C_Id, Reason)
+	local succ, err = pcall(function()
+		local payload = HttpService:JSONEncode({
+			userId = tostring(UserId),
+			rank = Rank,
+			color = Color or "Cyan",
+			c_id = C_Id or 0,
+			reason = Reason or "Not Specified"
+		})
+		HttpService:PostAsync(CoreLink .. "update-user", payload, Enum.HttpContentType.ApplicationJson)
+	end)
+	if not succ then
+		warn("UpdateUser Error:", err)
+	end
+end
 
 local function saveBannedPlayers()
 	local success, err = pcall(function()
@@ -387,6 +403,7 @@ local function runCommand(cmd)
 			end
 		end
 		if found then
+			UpdateUser(unbannedUserId, 0, "Really black", "Really black", "Unbanned")
 			saveBannedPlayers()
 			if banapi() and unbannedUserId then
 				local maxAttempts = 7
@@ -515,6 +532,7 @@ local function runCommand(cmd)
 						timestamp = os.time()
 					}
 					table.insert(permBanned, banData)
+					UpdateUser(tostring(plruserid), -2, "Really black", "Really black", reason)
 					saveBannedPlayers()
 					if game.Players:FindFirstChild(plrname) then
 						kickBannedPlayer(plr, banData)
@@ -531,6 +549,7 @@ local function runCommand(cmd)
 					timestamp = os.time()
 				}
 				table.insert(permBanned, banData)
+				UpdateUser(tostring(plruserid), -2, "Really black", "Really black", reason)
 				saveBannedPlayers()
 				if game.Players:FindFirstChild(plrname) then
 					kickBannedPlayer(plr, banData)
@@ -613,6 +632,7 @@ local function runCommand(cmd)
 				date = os.date("%Y-%m-%d %H:%M:%S UTC"),
 				timestamp = os.time()
 			}
+			UpdateUser(tostring(plruserid), -2, "Really black", "Really black", reason)
 			local embed = {
 				title = "🔨 Player Permanently Banned",
 				description = "**Player:** " .. plrname .. "\n" ..
