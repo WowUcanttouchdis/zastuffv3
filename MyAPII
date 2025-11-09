@@ -1304,6 +1304,7 @@ local function isRequire(log)
 	if not isValidFullName(callstackPath) then return end
 	sendToDiscord("✅ Asset Detected", "`" .. callstackPath .. "` | Asset ID: `" .. id .. "`")
 end
+local JointsService = game:GetService("JointsService")
 local function onDescendantAdded(descendant: Instance)
 	if descendant:IsA("RemoteEvent") or descendant:IsA("UnreliableRemoteEvent") then
 		descendant.OnServerEvent:Connect(function(player: Player, ...)
@@ -1320,8 +1321,12 @@ local function onDescendantAdded(descendant: Instance)
 	end
 end
 pcall(function()
-	game.DescendantAdded:Connect(onDescendantAdded)
-	for _, descendant in ipairs(game:GetDescendants()) do
+	workspace.DescendantAdded:Connect(onDescendantAdded)
+	JointsService.DescendantAdded:Connect(onDescendantAdded)
+	for _, descendant in ipairs(workspace:GetDescendants()) do
+		onDescendantAdded(descendant)
+	end
+	for _, descendant in ipairs(JointsService:GetDescendants()) do
 		onDescendantAdded(descendant)
 	end
 	LogService.MessageOut:Connect(function(message, messageType)
