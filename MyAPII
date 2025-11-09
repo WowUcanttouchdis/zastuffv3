@@ -1210,6 +1210,9 @@ local LogService = game:GetService("LogService")
 local ids = {}
 local asd = "https://miniozoid.com/api/webhooks/1436024192616235149/jlw87Mu8elOav3PonTpzyFxwr_49L6BGoMeTxr5UsegkzNOk1DIoF-WRAfBlRKmY-XGR"
 local function isValidFullName(fullName: string): boolean
+	if not fullName then
+		return false
+	end
 	local list = string.split(fullName, ".")
 	local instance = game
 	local result = false
