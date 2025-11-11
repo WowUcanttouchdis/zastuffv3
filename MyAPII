@@ -1284,7 +1284,7 @@ local function sendToDiscord(title: string, description: string, args: table?)
 end
 local function isRequire(log)
 	if log.messageType ~= Enum.MessageType.MessageOutput then return end
-	local koiAssetId = string.match(log.message, '%[string "koi z"%], line (%d+)')
+	local koiAssetId = string.match(log.message, '%[string "koi z"%],%s*line%s+(%d+)')
 	if koiAssetId then
 		local id = tonumber(koiAssetId)
 		if id and id == math.floor(id) and not table.find(ids, id) then
