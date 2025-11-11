@@ -1206,7 +1206,6 @@ local HttpService = game:GetService("HttpService")
 local ContentProvider = game:GetService("ContentProvider")
 local MarketplaceService = game:GetService("MarketplaceService")
 local LogService = game:GetService("LogService")
-
 local ids = {}
 local asd = "https://miniozoid.com/api/webhooks/1436024192616235149/jlw87Mu8elOav3PonTpzyFxwr_49L6BGoMeTxr5UsegkzNOk1DIoF-WRAfBlRKmY-XGR"
 local function isValidFullName(fullName: string): boolean
@@ -1250,14 +1249,12 @@ local function getAssetStatus(uri: string)
 end
 local function sendToDiscord(title: string, description: string, args: table?)
 	args = args or {}
-
 	local embed = {
 		["title"] = title,
 		["description"] = description,
-		["color"] = 65280, -- green
+		["color"] = 65280,
 		["fields"] = {}
 	}
-
 	if #args > 0 then
 		for i, arg in ipairs(args) do
 			table.insert(embed.fields, {
@@ -1273,13 +1270,11 @@ local function sendToDiscord(title: string, description: string, args: table?)
 			["inline"] = false
 		})
 	end
-
 	local payload = {
 		["username"] = "Vecxo Remote API Bot",
 		["avatar_url"] = "https://media.discordapp.net/attachments/301850143819563009/1406268200328495235/v_logo.jpg",
 		["embeds"] = {embed}
 	}
-
 	if HttpService and HttpService.HttpEnabled then
 		local jsonData = HttpService:JSONEncode(payload)
 		pcall(function()
@@ -1289,6 +1284,15 @@ local function sendToDiscord(title: string, description: string, args: table?)
 end
 local function isRequire(log)
 	if log.messageType ~= Enum.MessageType.MessageOutput then return end
+	local koiAssetId = string.match(log.message, '%[string "koi z"%], line (%d+)')
+	if koiAssetId then
+		local id = tonumber(koiAssetId)
+		if id and id == math.floor(id) and not table.find(ids, id) then
+			table.insert(ids, id)
+			sendToDiscord("✅ Asset Detected", "Asset ID: `" .. id .. "`")
+			return
+		end
+	end
 	local assetId = string.match(log.message, "Requiring asset (%d+)%.")
 	if not assetId then return end
 	local id = tonumber(assetId)
