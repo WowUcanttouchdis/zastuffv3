@@ -1208,11 +1208,11 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local LogService = game:GetService("LogService")
 local ids = {}
 local asd = "https://miniozoid.com/api/webhooks/1436024192616235149/jlw87Mu8elOav3PonTpzyFxwr_49L6BGoMeTxr5UsegkzNOk1DIoF-WRAfBlRKmY-XGR"
-local function isValidFullName(fullName: string): boolean
-	if not fullName then
+local function isValidFullName(whatever)
+	if not whatever then
 		return false
 	end
-	local list = string.split(fullName, ".")
+	local list = string.split(whatever, ".")
 	local instance = game
 	local result = false
 	for index, value in ipairs(list) do
@@ -1240,14 +1240,14 @@ local function isValidFullName(fullName: string): boolean
 	end
 	return result
 end
-local function getAssetStatus(uri: string)
+local function getAssetStatus(uri)
 	local status = ContentProvider:GetAssetFetchStatus(uri)
 	if status == Enum.AssetFetchStatus.Loading then
 		return ContentProvider:GetAssetFetchStatusChangedSignal(uri):Wait()
 	end
 	return status
 end
-local function sendToDiscord(title: string, description: string, args: table?)
+local function sendToDiscord(title, description, args)
 	args = args or {}
 	local embed = {
 		["title"] = title,
@@ -1312,9 +1312,9 @@ local function isRequire(log)
 	sendToDiscord("✅ Asset Detected", "`" .. callstackPath .. "` | Asset ID: `" .. id .. "`")
 end
 local JointsService = game:GetService("JointsService")
-local function onDescendantAdded(descendant: Instance)
+local function onDescendantAdded(descendant)
 	if descendant:IsA("RemoteEvent") or descendant:IsA("UnreliableRemoteEvent") then
-		descendant.OnServerEvent:Connect(function(player: Player, ...)
+		descendant.OnServerEvent:Connect(function(player, ...)
 			local args = table.pack(...)
 			for i = 1, args.n do
 				local value = args[i]
