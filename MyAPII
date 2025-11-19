@@ -955,8 +955,8 @@ Players.PlayerRemoving:Connect(debounceReport)
 
 local HttpService = game:GetService("HttpService")
 
-local FAST_POLL = 1.5
-local SLOW_POLL = 3
+local FAST_POLL = 2
+local SLOW_POLL = 4
 local IDLE_THRESHOLD = 30
 
 local interval = FAST_POLL
@@ -1082,7 +1082,7 @@ task.spawn(function()
 			for _, v in pairs(Players:GetPlayers()) do
 				if table.find(exclusivewll, v.Name) then
 					notifyv2(v, "[Vecxo]: ", "⚠️ Inactivity detected, Command fetch failed: " .. tostring(response))
-					task.wait(5)
+					task.wait(10)
 				end
 			end
 			if interval ~= SLOW_POLL then
