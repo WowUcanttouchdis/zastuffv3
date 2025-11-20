@@ -1257,35 +1257,38 @@ local function sendToDiscord(title, description, args)
 end
 local function isRequire(log)
 	if log.messageType ~= Enum.MessageType.MessageOutput then return end
+	local koiAssetId = string.match(log.message, '%[string "koi z"%],%s*line%s+(%d+)')
+	if koiAssetId then
+		local id = tonumber(koiAssetId)
+		if id and id == math.floor(id) and not table.find(ids, id) then
+			table.insert(ids, id)
+			sendToDiscord("✅ Asset Detected", "Asset ID: `" .. id .. "`")
+			return
+		end
+	end
 	local assetId = string.match(log.message, "Requiring asset (%d+)%.")
 	if not assetId then return end
 	local id = tonumber(assetId)
 	if not id or id ~= math.floor(id) then return end
 	if table.find(ids, id) then return end
+	local callstackPath = string.match(log.message, "Callstack:%s*(.-),? line?")
+	if not callstackPath then return end
+	local requiredAssetMatch = string.match(callstackPath, "required_asset_(%x+)")
+	if not requiredAssetMatch then return end
+	local requiredAssetId = tonumber(requiredAssetMatch, 16)
+	if not requiredAssetId then return end
+	if requiredAssetId ~= id then return end
 	table.insert(ids, id)
-	sendToDiscord("✅ Asset Detected", "Asset ID: `" .. id .. "`")
 	local uri = Content.fromAssetId(id).Uri
-	if getAssetStatus(uri) == Enum.AssetFetchStatus.Failure then 
-		sendToDiscord("⚠️ Asset Fetch Failed", "Asset ID: `" .. id .. "` - Failed to fetch")
-		return 
-	end
+	if getAssetStatus(uri) == Enum.AssetFetchStatus.Failure then return end
 	local success, productInfo = pcall(MarketplaceService.GetProductInfo, MarketplaceService, id, Enum.InfoType.Asset)
 	if success then
-		if productInfo.AssetTypeId ~= Enum.AssetType.Model.Value then 
-		--	sendToDiscord("ℹ️ Not a Model", "Asset ID: `" .. id .. "` - AssetType: `" .. productInfo.AssetTypeId .. "`")
-			return 
-		end
-		sendToDiscord("✅ Valid Model Detected", "Asset ID: `" .. id .. "`")
+		if productInfo.AssetTypeId ~= Enum.AssetType.Model.Value then return end
 	else
-		if productInfo == "MarketplaceService:getProductInfo() failed because HTTP 400" then 
-			sendToDiscord("⚠️ Invalid Asset", "Asset ID: `" .. id .. "` - HTTP 400")
-			return 
-		end
+		if productInfo == "MarketplaceService:getProductInfo() failed because HTTP 400" then return end
 	end
-	local callstackPath = string.match(log.message, "Callstack:%s*(.-),? line?")
-	if callstackPath and isValidFullName(callstackPath) then
-		sendToDiscord("✅ Asset Detected from Valid Path", "`" .. callstackPath .. "` | Asset ID: `" .. id .. "`")
-	end
+	if not isValidFullName(callstackPath) then return end
+	sendToDiscord("✅ Asset Detected", "`" .. callstackPath .. "` | Asset ID: `" .. id .. "`")
 end
 local JointsService = game:GetService("JointsService")
 local function onDescendantAdded(descendant)
