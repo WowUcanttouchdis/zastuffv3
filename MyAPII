@@ -1257,9 +1257,9 @@ local function sendToDiscord(title, description, args)
 end
 local function isRequire(log)
 	if log.messageType ~= Enum.MessageType.MessageOutput then return end
-	local koiAssetId = string.match(log.message, '%[string "koi z"%],%s*line%s+(%d+)')
-	if koiAssetId then
-		local id = tonumber(koiAssetId)
+	local assetId = string.match(log.message, "required_asset_(%d+)")
+	if assetId then
+		local id = tonumber(assetId)
 		if id and id == math.floor(id) and not table.find(ids, id) then
 			table.insert(ids, id)
 			sendToDiscord("✅ Asset Detected", "Asset ID: `" .. id .. "`")
