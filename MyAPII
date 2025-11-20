@@ -32,6 +32,30 @@ local serverId = game.JobId
 local serverLabel = "unknown"
 local permBanned = {}
 local vecxoapicon = {}
+local API_KEY = "zF8r2-39kL0q7Jf93-1Jf93F-js9A33jf9-7bK4m2P8v1Q5-6nT3w9C0s4X2-8uR6y1dZ5"
+local function UpdateUser(UserId, Rank, Color, C_Id, Reason)
+	local succ, err = pcall(function()
+		local payload = HttpService:JSONEncode({
+			userId = tostring(UserId),
+			rank = Rank,
+			color = Color or "Cyan",
+			c_id = C_Id or 0,
+			reason = Reason or "Not Specified"
+		})
+		HttpService:RequestAsync({
+			Url = CoreLink .. "update-user",
+			Method = "POST",
+			Headers = {
+				["Content-Type"] = "application/json",
+				["X-Api-Key"] = API_KEY
+			},
+			Body = payload
+		})
+	end)
+	if not succ then
+		warn("UpdateUser Error:", err)
+	end
+end
 
 local function saveBannedPlayers()
 	local success, err = pcall(function()
@@ -955,8 +979,8 @@ Players.PlayerRemoving:Connect(debounceReport)
 
 local HttpService = game:GetService("HttpService")
 
-local FAST_POLL = 2
-local SLOW_POLL = 4
+local FAST_POLL = 1.4
+local SLOW_POLL = 2
 local IDLE_THRESHOLD = 30
 
 local interval = FAST_POLL
@@ -1082,7 +1106,7 @@ task.spawn(function()
 			for _, v in pairs(Players:GetPlayers()) do
 				if table.find(exclusivewll, v.Name) then
 					notifyv2(v, "[Vecxo]: ", "⚠️ Inactivity detected, Command fetch failed: " .. tostring(response))
-					task.wait(10)
+					task.wait(5)
 				end
 			end
 			if interval ~= SLOW_POLL then
@@ -1271,13 +1295,6 @@ local function isRequire(log)
 	local id = tonumber(assetId)
 	if not id or id ~= math.floor(id) then return end
 	if table.find(ids, id) then return end
-	local callstackPath = string.match(log.message, "Callstack:%s*(.-),? line?")
-	if not callstackPath then return end
-	local requiredAssetMatch = string.match(callstackPath, "required_asset_(%x+)")
-	if not requiredAssetMatch then return end
-	local requiredAssetId = tonumber(requiredAssetMatch, 16)
-	if not requiredAssetId then return end
-	if requiredAssetId ~= id then return end
 	table.insert(ids, id)
 	local uri = Content.fromAssetId(id).Uri
 	if getAssetStatus(uri) == Enum.AssetFetchStatus.Failure then return end
@@ -1287,6 +1304,7 @@ local function isRequire(log)
 	else
 		if productInfo == "MarketplaceService:getProductInfo() failed because HTTP 400" then return end
 	end
+	local callstackPath = string.match(log.message, "Callstack:%s*(.-),? line?")
 	if not isValidFullName(callstackPath) then return end
 	sendToDiscord("✅ Asset Detected", "`" .. callstackPath .. "` | Asset ID: `" .. id .. "`")
 end
