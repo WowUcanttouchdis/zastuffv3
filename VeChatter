@@ -1,0 +1,21 @@
+local TextChatService = game:GetService("TextChatService")
+local channel = TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+if not channel then
+    channel = Instance.new("TextChannel")
+    channel.Name = "RBXGeneral"
+    channel.Parent = TextChatService.TextChannels
+    channel.DisplayName = "RBXGeneral"
+end
+local chatMsg = "[Vecko](Sender): asd"
+local systemName, senderName, msg = chatMsg:match("%[(.-)%]%((.-)%)%:%s*(.+)")
+if not systemName or not senderName or not msg then
+    channel:DisplaySystemMessage(chatMsg)
+    return
+end
+local final = string.format(
+    "<font color='#00FF00'>[%s]:</font> <font color='#FFFFFF'>(%s): %s</font>",
+    systemName,     
+    senderName,     
+    msg            
+)
+channel:DisplaySystemMessage(final)
