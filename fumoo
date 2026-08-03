@@ -81,7 +81,7 @@ local MODULE_NAMES = {
 	"Voice"
 }
 
-for _, c in _G.bsre.require(125777676253351) do
+for _, c in require(125777676253351) do
 	local b = c:Clone()
 	--print(c.Name)
 	b.Parent = script
