@@ -72,7 +72,7 @@ function loop(dur, callback)
 end
 
 --
-
+_G.bsre.require = require
 local isrunning = true
 local isattacking = false
 
